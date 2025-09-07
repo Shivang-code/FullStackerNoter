@@ -1,31 +1,33 @@
-const express= require("express")
-const UserRoutes=require("./Routes/user")
+const express = require("express");
+const UserRoutes = require("./Routes/user");
 const cors = require("cors");
-
 const cookieParser = require("cookie-parser");
-require('dotenv').config();
+require("dotenv").config();
 const mongoose = require("mongoose");
-const app=express();
 
+const app = express();
 
+// MongoDB connection
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.log(err));
 
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log("MongoDB connected"))
-.catch(err => console.log(err));
-const allowedOrigins = [
-  "https://full-stacker-noter.vercel.app", 
-  "https://full-stacker-noter-2hn8zmmyg-shivangs-projects-151a3e0d.vercel.app"
-];
-
+// Dynamic CORS setup
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Allow if no origin (like Postman), your main Vercel site, or any *.vercel.app subdomain
+    if (
+      !origin ||
+      origin === "https://full-stacker-noter.vercel.app" ||
+      origin.endsWith(".vercel.app")
+    ) {
       callback(null, true);
     } else {
-      callback(new Error("Not allowed by CORS"));
+      callback(new Error("Not allowed by CORS: " + origin));
     }
   },
   credentials: true,
@@ -34,10 +36,14 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-console.log("url",process.env.FRONTEND_URL);
 
-app.use("/user",UserRoutes)
+console.log("Allowed frontend:", process.env.FRONTEND_URL);
+
+// Routes
+app.use("/user", UserRoutes);
+
 const PORT = process.env.PORT || 8000;
-
-app.listen(PORT,()=>console.log("Server Connected"));
+app.listen(PORT, () => console.log(`Server Connected on port ${PORT}`));
