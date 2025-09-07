@@ -18,12 +18,31 @@ mongoose.connect(process.env.MONGO_URI, {
 
 app.use(express.json())
 app.use(express.urlencoded({extended:false}))
+const allowedOrigins = [
+  "http://localhost:5173",                        // ✅ Local dev
+  "https://full-stacker-noter.vercel.app",        // ✅ Your main Vercel frontend
+  "https://full-stacker-noter-*.vercel.app"       // ✅ Any preview deployments
+];
+
 const corsOptions = {
-  origin: process.env.FRONTEND_URL,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like curl or Postman)
+    if (!origin) return callback(null, true);
+
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.endsWith(".vercel.app") // allow any vercel subdomain
+    ) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS: " + origin));
+    }
+  },
   credentials: true,
-  methods: ["GET","POST","PUT","DELETE","OPTIONS"],
-  allowedHeaders: ["Content-Type","Authorization"]
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
+
 app.use(cors(corsOptions));
 app.use(cookieParser());
 console.log("url",process.env.FRONTEND_URL);
