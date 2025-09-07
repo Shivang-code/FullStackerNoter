@@ -1,49 +1,39 @@
-const express = require("express");
-const UserRoutes = require("./Routes/user");
+const express= require("express")
+const UserRoutes=require("./Routes/user")
 const cors = require("cors");
+
 const cookieParser = require("cookie-parser");
-require("dotenv").config();
+require('dotenv').config();
 const mongoose = require("mongoose");
+const app=express();
 
-const app = express();
 
-// MongoDB connection
-mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.log(err));
 
-// Dynamic CORS setup
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log("MongoDB connected"))
+.catch(err => console.log(err));
+
+app.use(express.json())
+app.use(express.urlencoded({extended:false}))
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow if no origin (like Postman), your main Vercel site, or any *.vercel.app subdomain
-    if (
-      !origin ||
-      origin === "https://full-stacker-noter.vercel.app" ||
-      origin.endsWith(".vercel.app")
-    ) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS: " + origin));
-    }
-  },
+  origin: process.env.FRONTEND_URL,
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  methods: ["GET","POST","PUT","DELETE","OPTIONS"],
+  allowedHeaders: ["Content-Type","Authorization"]
 };
 app.use(cors(corsOptions));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// app.use(cors(
+//     { origin: process.env.FRONTEND_URL,   
+//   credentials: true,}
+// ));
 app.use(cookieParser());
+console.log("url",process.env.FRONTEND_URL);
 
-console.log("Allowed frontend:", process.env.FRONTEND_URL);
-
-// Routes
-app.use("/user", UserRoutes);
-
+app.use("/user",UserRoutes)
 const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => console.log(`Server Connected on port ${PORT}`));
+
+app.listen(PORT,()=>console.log("Server Connected"));
