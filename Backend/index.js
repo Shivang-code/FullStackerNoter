@@ -15,21 +15,25 @@ mongoose.connect(process.env.MONGO_URI, {
 })
 .then(() => console.log("MongoDB connected"))
 .catch(err => console.log(err));
+const allowedOrigins = [
+  "https://full-stacker-noter.vercel.app", 
+  "https://full-stacker-noter-2hn8zmmyg-shivangs-projects-151a3e0d.vercel.app"
+];
 
-app.use(express.json())
-app.use(express.urlencoded({extended:false}))
 const corsOptions = {
-  origin: process.env.FRONTEND_URL,
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
-  methods: ["GET","POST","PUT","DELETE","OPTIONS"],
-  allowedHeaders: ["Content-Type","Authorization"]
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
 app.use(cors(corsOptions));
 
-// app.use(cors(
-//     { origin: process.env.FRONTEND_URL,   
-//   credentials: true,}
-// ));
 app.use(cookieParser());
 console.log("url",process.env.FRONTEND_URL);
 
